@@ -1,0 +1,63 @@
+# ─────────────────────────────────────────────────────────────
+#  SIGNAL — AI Data Vault  ·  .gitignore
+#  Keep your PERSONAL DATA and SECRETS out of the repo.
+# ─────────────────────────────────────────────────────────────
+
+# ⚠️  YOUR EXPORTED AI DATA — never commit this. It contains your
+#     private conversations, images, memories and business info.
+#     Rename these to match your own folders if they differ.
+/Anthropic/
+/OpenAI/
+/Google-Gemini/
+/SpaceXAI/
+/Grok/
+/Claude/
+/ChatGPT/
+/Gemini/
+
+# Any generic export drop-zones
+/data/
+/exports/
+/*export*/
+/*-data-*/
+
+# ⚠️  The local index + cache: holds a SQLite copy of every message
+#     AND your saved Anthropic API key. Never commit.
+/.aivault/
+*.sqlite
+*.sqlite-wal
+*.sqlite-shm
+*.sqlite-journal
+
+# API keys / secrets, just in case
+.env
+.env.*
+*.key
+secrets.json
+config.local.php
+
+# Raw asset/media file types (in case any land beside index.php)
+*.dat
+*.mp4
+*.webm
+*.mov
+*.wav
+*.mp3
+*.m4a
+*.heic
+*.heif
+
+# macOS / editors / OS cruft
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+Thumbs.db
+desktop.ini
+*.swp
+*.swo
+*~
+.idea/
+.vscode/
+*.log
