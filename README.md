@@ -64,6 +64,26 @@ SIGNAL understands the real, current export formats from each provider. Grab you
 
 ---
 
+## Getting your data in
+
+Your exports download as **`.zip` files**. Here's the whole flow:
+
+1. **Export** your data from each AI (links in the table above). Each arrives as a `.zip`.
+2. **Unzip** each one.
+3. **Keep each export in its own folder.** Give them clear names if you like — e.g. `Anthropic`, `OpenAI`, `Google-Gemini`, `SpaceXAI` (or `Claude`, `ChatGPT`, `Gemini`, `Grok`). One AI per folder.
+4. **Point SIGNAL at each folder** — two ways, pick whichever is easier:
+   - **Drop-in:** move the four folders next to `index.php`. SIGNAL auto-detects them on the Import & Settings screen.
+   - **Browse:** on the **Import & Settings** screen, click **Browse…** next to a source and navigate to that AI's unzipped folder, then **Use this folder**. The path is saved for you. (The folder picker runs on your own machine and is limited to your home directory.)
+5. **Build the index.** Click **Build index** on each source (or **Build / rebuild all indexes**). Done — browse away.
+
+> You can keep your unzipped folders anywhere in your home directory (Desktop, Downloads, an external-drive folder synced locally, etc.) and just Browse to them — they don't have to sit next to `index.php`. If you re-export later, replace the folder's contents and hit **Build index** again.
+
+```
+Export (.zip)  →  Unzip  →  One folder per AI  →  Browse / drop-in  →  Build index
+```
+
+---
+
 ## Quick start
 
 **Requirements:** PHP 8.0+ with the `pdo_sqlite`, `gd`, `curl`, and `fileinfo` extensions (all standard). Check with `php -m`.
@@ -85,7 +105,7 @@ php -S localhost:8080
 open http://localhost:8080
 ```
 
-Then go to **Import & Settings → Build / rebuild all indexes**. First run scans your exports into `.aivault/index.sqlite`; after that the app is instant.
+Then go to **Import & Settings**. If your folders sit next to `index.php` they're auto-detected; otherwise click **Browse…** next to each source and point it at the unzipped folder. Hit **Build / rebuild all indexes** — the first run scans your exports into `.aivault/index.sqlite`; after that the app is instant.
 
 > **Faster gallery:** the built-in PHP server is single-threaded, so the first load of a large gallery generates thumbnails one at a time. Run with workers for parallelism:
 > ```bash

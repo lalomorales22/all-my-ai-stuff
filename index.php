@@ -134,6 +134,14 @@ function provider_dir(string $pid): ?string {
     return $real ?: null;
 }
 
+/** The user's home directory — the root the folder browser is confined to. */
+function home_dir(): string {
+    $h = getenv('HOME') ?: ($_SERVER['HOME'] ?? '');
+    if (!$h && function_exists('posix_getpwuid')) { $u = @posix_getpwuid(posix_getuid()); $h = $u['dir'] ?? ''; }
+    $h = $h ? realpath($h) : '';
+    return $h ?: (realpath(dirname(APP_ROOT)) ?: APP_ROOT);
+}
+
 /** Allowed media roots — used to sandbox the media route against traversal. */
 function media_roots(): array {
     $roots = [];
@@ -1050,6 +1058,32 @@ function api_settings_get(): void {
         'app_root'=> APP_ROOT,
     ]);
 }
+/** Server-side folder browser for the Settings "Browse" button. Confined to $HOME. */
+function api_browse(): void {
+    $home = home_dir();
+    $homeSlash = rtrim($home, '/') . '/';
+    $req = $_GET['path'] ?? '';
+    $real = $req !== '' ? realpath($req) : $home;
+    if (!$real || !is_dir($real)) $real = $home;
+    // Confine to the home directory tree.
+    if ($real !== $home && !str_starts_with(rtrim($real, '/') . '/', $homeSlash)) $real = $home;
+
+    $dirs = [];
+    foreach (@scandir($real) ?: [] as $e) {
+        if ($e === '.' || $e === '..' || $e[0] === '.') continue;
+        $full = $real . '/' . $e;
+        if (is_dir($full)) $dirs[] = ['name' => $e, 'path' => $full];
+    }
+    usort($dirs, fn($a, $b) => strcasecmp($a['name'], $b['name']));
+
+    $parent = null;
+    if ($real !== $home) {
+        $p = dirname($real);
+        $parent = ($p === $home || str_starts_with(rtrim($p, '/') . '/', $homeSlash)) ? $p : $home;
+    }
+    jout(['path' => $real, 'parent' => $parent, 'home' => $home, 'dirs' => $dirs, 'is_home' => ($real === $home)]);
+}
+
 function api_settings_save(array $in): void {
     foreach (default_providers() as $pid => $_) {
         if (isset($in["path_$pid"])) cfg_set("path_$pid", trim((string)$in["path_$pid"]));
@@ -1230,6 +1264,7 @@ if (isset($_GET['api'])) {
             case 'saved_create':   api_saved_create($input); break;
             case 'saved_delete':   api_saved_delete($input); break;
             case 'settings':       api_settings_get(); break;
+            case 'browse':         api_browse(); break;
             case 'settings_save':  api_settings_save($input); break;
             case 'index':          jout(run_index((string)($input['provider'] ?? $_GET['provider'] ?? ''))); break;
             case 'chat':           api_chat($input); break;
@@ -1471,6 +1506,22 @@ button{font-family:inherit}
 .field input{width:100%;background:var(--ink);border:1px solid var(--line);color:var(--txt);border-radius:10px;padding:11px 13px;font-family:var(--mono);font-size:13px}
 .notice{border-left:3px solid var(--signal);background:rgba(139,140,245,.07);padding:12px 16px;border-radius:0 10px 10px 0;font-size:13px;color:var(--muted)}
 
+/* ---------- Folder picker ---------- */
+.fp-ov{position:fixed;inset:0;z-index:120;background:rgba(6,7,11,.86);backdrop-filter:blur(6px);display:flex;align-items:center;justify-content:center}
+.fp{width:min(640px,92vw);max-height:82vh;display:flex;flex-direction:column;background:var(--panel);border:1px solid var(--line-2);border-radius:16px;overflow:hidden;box-shadow:0 30px 80px -20px #000}
+.fp-head{display:flex;justify-content:space-between;align-items:center;padding:16px 18px;border-bottom:1px solid var(--line)}
+.fp-head b{font-family:var(--disp);font-size:16px}
+.fp-head .fp-x{background:none;border:none;color:var(--muted);cursor:pointer;font-size:15px;padding:4px 8px;border-radius:8px}
+.fp-head .fp-x:hover{background:rgba(255,255,255,.06);color:var(--txt)}
+.fp-crumb{padding:9px 18px;font-size:11.5px;color:var(--muted);border-bottom:1px solid var(--line);word-break:break-all;background:var(--ink)}
+.fp-list{flex:1;overflow-y:auto;padding:8px;min-height:180px}
+.fp-item{padding:9px 12px;border-radius:9px;cursor:pointer;font-size:13.5px;display:flex;gap:9px;align-items:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.fp-item:hover{background:rgba(139,140,245,.12)}
+.fp-item.up{color:var(--muted)}
+.fp-item .ic{flex:none;width:16px;text-align:center}
+.fp-foot{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:14px 18px;border-top:1px solid var(--line);flex-wrap:wrap}
+.fp-foot .h{font-size:12px;color:var(--muted);max-width:280px}
+
 .toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%);background:var(--elev);border:1px solid var(--line-2);
   padding:11px 18px;border-radius:12px;font-size:13px;z-index:200;box-shadow:0 20px 50px -18px #000;opacity:0;transition:.2s}
 .toast.on{opacity:1}
@@ -1519,6 +1570,7 @@ const ICON = {
   play:'<path d="M6 4l14 8-14 8z"/>',
   dl:'<path d="M12 3v12m0 0l-4-4m4 4l4-4M4 20h16"/>',
   save:'<path d="M5 3h11l4 4v14H5zM8 3v6h8"/>',
+  folder:'<path d="M3 7a2 2 0 012-2h4l2 2h8a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2z"/>',
   x:'<path d="M6 6l12 12M18 6L6 18"/>',
 };
 function svg(name,extra=''){ return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" ${extra}>${ICON[name]||''}</svg>`; }
@@ -1960,12 +2012,46 @@ async function sendChat(){
   $('#saveOut').onclick=async()=>{ await post('saved_create',{kind:chatState.mode,title:text.slice(0,60),body:acc,meta:{model:chatState.model}}); toast('Saved to your library.'); };
 }
 
+// ---- server-side folder picker (returns an absolute path, or null) ----
+async function pickFolder(start){
+  return new Promise(resolve=>{
+    const ov=document.createElement('div'); ov.className='fp-ov';
+    ov.innerHTML=`<div class="fp">
+      <div class="fp-head"><b>Select the unzipped export folder</b><button class="fp-x">Close</button></div>
+      <div class="fp-crumb" id="fpPath">…</div>
+      <div class="fp-list" id="fpList"><div class="dim" style="padding:20px"><span class="spin"></span></div></div>
+      <div class="fp-foot"><span class="h">Open the folder that holds the export's files, then “Use this folder”.</span>
+        <div style="display:flex;gap:8px"><button class="btn ghost fp-cancel">Cancel</button><button class="btn primary fp-use">Use this folder</button></div></div>
+    </div>`;
+    document.body.appendChild(ov);
+    let cur=start||'';
+    const close=v=>{ ov.remove(); document.removeEventListener('keydown',onKey); resolve(v); };
+    const onKey=e=>{ if(e.key==='Escape') close(null); };
+    document.addEventListener('keydown',onKey);
+    ov.querySelector('.fp-x').onclick=()=>close(null);
+    ov.querySelector('.fp-cancel').onclick=()=>close(null);
+    ov.querySelector('.fp-use').onclick=()=>close(cur);
+    ov.addEventListener('click',e=>{ if(e.target===ov) close(null); });
+    async function load(p){
+      const d=await api('browse', p?{path:p}:{});
+      cur=d.path; $('#fpPath').textContent=d.path;
+      let html='';
+      if(d.parent) html+=`<div class="fp-item up" data-path="${esc(d.parent)}"><span class="ic">↰</span>Parent folder</div>`;
+      html+=d.dirs.map(x=>`<div class="fp-item" data-path="${esc(x.path)}"><span class="ic">📁</span>${esc(x.name)}</div>`).join('');
+      if(!d.dirs.length) html+='<div class="dim" style="padding:14px 12px">No sub-folders here — this folder itself may be the one to use.</div>';
+      $('#fpList').innerHTML=html;
+      $$('#fpList .fp-item').forEach(it=>it.onclick=()=>load(it.dataset.path));
+    }
+    load(cur);
+  });
+}
+
 // ================= IMPORT =================
 async function renderImport(v){
   crumb('Import & Settings','connect folders · build index · assistant key');
-  const s=await api('settings');
+  let s=await api('settings');
   v.innerHTML=`
-   <div class="notice">Drop your export folders next to <span class="mono">index.php</span>. SIGNAL auto-detects the four common layouts; adjust a path below if yours differs, then <b>Build index</b>. Everything stays on this machine.</div>
+   <div class="notice"><b>Getting your data in:</b> export from each AI (they download as <span class="mono">.zip</span>) → <b>unzip</b> each one → keep each in its own folder. Then either drop those folders next to <span class="mono">index.php</span> (auto-detected), or click <b>Browse</b> below to point SIGNAL straight at an unzipped folder. Build the index and you're set. Everything stays on this machine.</div>
    <div class="section-h"><h2>Sources</h2></div>
    <div class="imp-grid" id="impRows"></div>
    <div style="display:flex;gap:10px;margin-top:16px;flex-wrap:wrap">
@@ -1994,12 +2080,23 @@ async function renderImport(v){
           <div class="st">${p.resolved?('✓ found · '+ (parts.join(' · ')||'not indexed')):'✗ folder not found'}</div>
         </div>
         <div style="display:flex;flex-direction:column;gap:8px">
+          <button class="btn ghost browse" data-p="${pid}">${svg('folder','style="width:14px;height:14px"')} Browse…</button>
           <button class="btn idx" data-p="${pid}" ${p.resolved?'':'disabled'}>Build index</button>
         </div>
       </div>`;
     }).join('');
     $$('#impRows .idx').forEach(b=>b.onclick=()=>doIndex(b.dataset.p,b));
-    $$('#impRows .pathInput').forEach(i=>i.onchange=async()=>{ await post('settings_save',{['path_'+i.dataset.p]:i.value}); toast('Path saved. Rebuild to apply.'); });
+    $$('#impRows .pathInput').forEach(i=>i.onchange=async()=>{ await setPath(i.dataset.p, i.value); });
+    $$('#impRows .browse').forEach(b=>b.onclick=async()=>{
+      const inp=$(`.pathInput[data-p="${b.dataset.p}"]`);
+      const chosen=await pickFolder(inp && inp.value ? inp.value : s.app_root);
+      if(chosen){ await setPath(b.dataset.p, chosen); toast(`${LB[b.dataset.p]} path set — now Build index.`); }
+    });
+  }
+  async function setPath(pid,path){
+    await post('settings_save',{['path_'+pid]:path});
+    s=await api('settings');   // refresh so the ✓ found / ✗ status is accurate
+    rows();
   }
   rows();
 
