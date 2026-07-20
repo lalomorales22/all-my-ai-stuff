@@ -1,6 +1,6 @@
 # all-my-ai-stuff
 
-### SIGNAL — a personal vault for everything you've made with the machines.
+### All My AI Stuff — a personal vault for everything you've made with the machines.
 
 One `index.php` file that reads your **exported data from Claude, ChatGPT, Gemini, and Grok** and turns it into a single, beautiful place to browse every conversation, image, video, and idea — plus a built-in AI assistant (Claude Opus 4.8 / Sonnet 5) that helps you mine it, build personas, create content, and design custom datasets.
 
@@ -18,7 +18,7 @@ php -S localhost:8080
 
 If you use more than one AI, your history is scattered across four different export formats — giant JSON blobs, thousands of opaque `.dat` files, HTML dumps, folders of UUID-named videos. It's *your* data, but it's unreadable.
 
-**SIGNAL** indexes all of it into one local SQLite database and gives it a home: a dark, instrument-panel UI where each provider is a "station," a unified media gallery, a real conversation reader, and an assistant that can actually see your corpus.
+**All My AI Stuff** indexes all of it into one local SQLite database and gives it a home: a dark, instrument-panel UI where each provider is a "station," a unified media gallery, a real conversation reader, and an assistant that can actually see your corpus.
 
 ---
 
@@ -42,9 +42,9 @@ If you use more than one AI, your history is scattered across four different exp
 
 ## Supported exports
 
-SIGNAL understands the real, current export formats from each provider. Grab yours here, unzip, and drop the folder next to `index.php`.
+All My AI Stuff understands the real, current export formats from each provider. Grab yours here, unzip, and drop the folder next to `index.php`.
 
-| Provider | Where to export | What SIGNAL reads | Default folder |
+| Provider | Where to export | What it reads | Default folder |
 |---|---|---|---|
 | **Claude** (Anthropic) | claude.ai → Settings → Privacy → *Export data* | `conversations.json` (streamed), `projects/` → personas, `memories.json` | `Anthropic/` |
 | **ChatGPT** (OpenAI) | ChatGPT → Settings → Data controls → *Export data* | `conversations-*.json` message trees + `*.dat` images/voice/video | `OpenAI/` |
@@ -71,8 +71,8 @@ Your exports download as **`.zip` files**. Here's the whole flow:
 1. **Export** your data from each AI (links in the table above). Each arrives as a `.zip`.
 2. **Unzip** each one.
 3. **Keep each export in its own folder.** Give them clear names if you like — e.g. `Anthropic`, `OpenAI`, `Google-Gemini`, `SpaceXAI` (or `Claude`, `ChatGPT`, `Gemini`, `Grok`). One AI per folder.
-4. **Point SIGNAL at each folder** — two ways, pick whichever is easier:
-   - **Drop-in:** move the four folders next to `index.php`. SIGNAL auto-detects them on the Import & Settings screen.
+4. **Point the app at each folder** — two ways, pick whichever is easier:
+   - **Drop-in:** move the four folders next to `index.php`. The app auto-detects them on the Import & Settings screen.
    - **Browse:** on the **Import & Settings** screen, click **Browse…** next to a source and navigate to that AI's unzipped folder, then **Use this folder**. The path is saved for you. (The folder picker runs on your own machine and is limited to your home directory.)
 5. **Build the index.** Click **Build index** on each source (or **Build / rebuild all indexes**). Done — browse away.
 

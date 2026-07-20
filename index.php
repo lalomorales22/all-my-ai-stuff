@@ -1,6 +1,6 @@
 <?php
 /**
- * SIGNAL — AI Data Vault
+ * All My AI Stuff — AI Data Vault
  * A single-file viewer, gallery and assistant for your exported data from
  * Anthropic (Claude), OpenAI (ChatGPT), Google (Gemini / NotebookLM / Flow) and xAI (Grok).
  *
@@ -1114,7 +1114,7 @@ function api_chat(array $in): void {
     $model = $in['model'] ?? 'claude-opus-4-8';
     if (!in_array($model, ['claude-opus-4-8', 'claude-sonnet-5'], true)) $model = 'claude-opus-4-8';
     $messages = $in['messages'] ?? [];
-    $system = (string)($in['system'] ?? 'You are SIGNAL, a sharp, resourceful assistant embedded in a personal AI data vault. The user has exported their conversations, images and personas from Claude, ChatGPT, Gemini and Grok. Help them explore that corpus, build personas, create content, and design custom datasets. Be concrete and useful.');
+    $system = (string)($in['system'] ?? 'You are the assistant inside "All My AI Stuff", the user\'s personal AI data vault. The user has exported their conversations, images and personas from Claude, ChatGPT, Gemini and Grok. Help them explore that corpus, build personas, create content, and design custom datasets. Be concrete and useful.');
 
     $payload = [
         'model' => $model,
@@ -1212,7 +1212,7 @@ function export_conversation_md(string $id): void {
 function export_index_json(): void {
     $pdo = db();
     header('Content-Type: application/json; charset=utf-8');
-    header('Content-Disposition: attachment; filename="signal-vault-index.json"');
+    header('Content-Disposition: attachment; filename="all-my-ai-stuff-index.json"');
     $F = JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_SUBSTITUTE | JSON_PARTIAL_OUTPUT_ON_ERROR;
     echo '{"exported_at":' . time() . ',"conversations":';
     echo json_encode($pdo->query('SELECT id,provider,title,created_at,msg_count,category FROM conversations')->fetchAll(PDO::FETCH_ASSOC), $F);
@@ -1294,7 +1294,7 @@ $boot = [
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>SIGNAL — AI Data Vault</title>
+<title>All My AI Stuff — AI Data Vault</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
@@ -1579,7 +1579,7 @@ function svg(name,extra=''){ return `<svg viewBox="0 0 24 24" fill="none" stroke
 function shell(){
   app.innerHTML = `
   <nav class="rail">
-    <div class="brand"><b>S</b></div>
+    <div class="brand"><b>A</b></div>
     <button class="navbtn" data-nav="overview"><span class="tip">Overview</span>${svg('overview')}</button>
     ${Object.keys(PROV).map((p,i)=>`<button class="navbtn" data-nav="p:${p}"><span class="tip">${LB[p]}</span><span class="pdot" style="color:${ACC[p]}"></span></button>`).join('')}
     <button class="navbtn" data-nav="gallery"><span class="tip">Gallery</span>${svg('gallery')}</button>
@@ -1589,7 +1589,7 @@ function shell(){
   </nav>
   <main class="main">
     <div class="topbar">
-      <div class="crumb" id="crumb">SIGNAL <span class="sub">AI Data Vault</span></div>
+      <div class="crumb" id="crumb">All My AI Stuff <span class="sub">AI Data Vault</span></div>
       <div class="search"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
         <input id="globalSearch" placeholder="Search conversations & media…" autocomplete="off"></div>
     </div>
@@ -1623,9 +1623,9 @@ function go(view,provider=null,push=true){
 
 // ================= OVERVIEW =================
 async function renderOverview(v){
-  crumb('SIGNAL','AI Data Vault');
+  crumb('All My AI Stuff','AI Data Vault');
   v.innerHTML = `<section class="hero"><canvas id="constellation"></canvas><div class="hero-inner">
-    <div class="eyebrow">Personal signal archive · four sources, one instrument</div>
+    <div class="eyebrow">Personal AI archive · four sources, one instrument</div>
     <h1 class="h1">Every conversation, image and idea<br>you've made with the machines.</h1>
     <div class="stats" id="heroStats"><div class="stat"><b>·</b><span>loading</span></div></div>
   </div></section>
@@ -1903,7 +1903,7 @@ function lbShow(i){
 let pendingPersona=null;
 const chatState={ model:'claude-opus-4-8', mode:'chat', messages:[], ctxConv:new Set(), ctxPersona:new Set(), streaming:false };
 const MODES={
-  chat:{label:'Chat',sys:'You are SIGNAL, a sharp assistant inside the user\'s personal AI data vault. Be concrete and useful.'},
+  chat:{label:'Chat',sys:'You are the assistant inside "All My AI Stuff", the user\'s personal AI data vault. Be concrete and useful.'},
   persona:{label:'Build a Persona',sys:'You are a persona architect. From the user\'s data and requests, craft vivid, usable AI personas: name, voice, values, do/don\'t, and a ready-to-paste system prompt. Ask only what you must.'},
   content:{label:'Content Creation',sys:'You are a content strategist and writer. Turn the user\'s ideas and past conversations into polished posts, threads, scripts, or copy. Offer 2-3 options with distinct angles.'},
   dataset:{label:'Custom Dataset',sys:'You help the user distill their exported AI history into structured, reusable datasets — instruction/response pairs, topic taxonomies, JSON records. Propose a schema, then produce clean examples.'},
@@ -1923,7 +1923,7 @@ async function renderAssistant(v){
       </div>
       <div class="chat-scroll" id="chatScroll"><div class="empty"><div class="big">Ask anything about your vault</div>Pick a mode, attach context from the right, and go. Uses your Anthropic API key.</div></div>
       <div class="chat-input">
-        <textarea id="chatText" placeholder="Message SIGNAL…  (⏎ to send, ⇧⏎ for newline)"></textarea>
+        <textarea id="chatText" placeholder="Message the assistant…  (⏎ to send, ⇧⏎ for newline)"></textarea>
         <button class="btn primary" id="sendBtn">Send</button>
       </div>
     </div>
@@ -2051,7 +2051,7 @@ async function renderImport(v){
   crumb('Import & Settings','connect folders · build index · assistant key');
   let s=await api('settings');
   v.innerHTML=`
-   <div class="notice"><b>Getting your data in:</b> export from each AI (they download as <span class="mono">.zip</span>) → <b>unzip</b> each one → keep each in its own folder. Then either drop those folders next to <span class="mono">index.php</span> (auto-detected), or click <b>Browse</b> below to point SIGNAL straight at an unzipped folder. Build the index and you're set. Everything stays on this machine.</div>
+   <div class="notice"><b>Getting your data in:</b> export from each AI (they download as <span class="mono">.zip</span>) → <b>unzip</b> each one → keep each in its own folder. Then either drop those folders next to <span class="mono">index.php</span> (auto-detected), or click <b>Browse</b> below to point the app straight at an unzipped folder. Build the index and you're set. Everything stays on this machine.</div>
    <div class="section-h"><h2>Sources</h2></div>
    <div class="imp-grid" id="impRows"></div>
    <div style="display:flex;gap:10px;margin-top:16px;flex-wrap:wrap">
